@@ -1,6 +1,7 @@
 
 import numpy as np
 import scipy.special
+import matplotlib.pyplot
 """
 Very simple three layer neural network 
 """
@@ -59,11 +60,54 @@ class SimpleNeuralNet:
         final_outputs = self.activation_function(input_final)
         return final_outputs
 
-if __name__ == '__main__':
-    input_nodes  = 3
-    hidden_nodes = 3
-    output_nodes = 3
-    learning_rate = 0.3
 
+if __name__ == '__main__':
+    input_nodes  = 784
+    hidden_nodes = 100
+    output_nodes = 10
+    learning_rate = 0.2
+    epochs = 2
+
+    #create neural network
     snn = SimpleNeuralNet(input_nodes, hidden_nodes, output_nodes, learning_rate)
-    print(snn.query([1.0, 0.5, -1.5]))
+
+    #get data
+    training_data_file = open('../MNIST/mnist_train.csv', 'r')
+    training_data_list = training_data_file.readlines()
+    training_data_file.close()
+
+    #do training
+    for e in range(epochs):
+        for record in training_data_list:
+            all_values = record.split(',')
+            inputs = (np.asfarray(all_values[1:]) / 255.0 * 0.99) + 0.01
+            targets = np.zeros(output_nodes) + 0.01
+            targets[int(all_values[0])] = 0.99
+            snn.train(inputs, targets)
+
+    #get test data
+    test_data_file = open('../MNIST/mnist_test.csv', 'r')
+    test_data_list = test_data_file.readlines()
+    training_data_file.close()
+
+    scorecard = []
+    #do testing
+    for record in test_data_list:
+        all_values = record.split(',')
+        correct_label = int(all_values[0])
+        print("Correct label: " + all_values[0])
+        inputs = (np.asfarray(all_values[1:]) / 255.0 * 0.99) + 0.01
+        outputs = snn.query(inputs)
+        label = np.argmax(outputs)
+        print("SNN Answer: " + str(label))
+        scorecard.append(int(label == correct_label))
+
+    print("Percent Correct: ", float(np.asarray(scorecard).sum()/float(len(scorecard))))
+
+
+    #image_array = np.asfarray(all_values[1:]).reshape((28,28))
+
+    #matplotlib.pyplot.imshow(image_array, cmap="Greys", interpolation='None')
+    #matplotlib.pyplot.show()
+
+    #print(snn.query((np.asfarray(all_values[1:]) / 255.0 * .99) + 0.01 ))
